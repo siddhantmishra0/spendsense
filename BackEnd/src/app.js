@@ -11,7 +11,6 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://expense-tracker-dusky-two-83.vercel.app",
       "http://localhost:5173",
     ],
     credentials: true,
@@ -27,7 +26,7 @@ app.use(
 app.use((req, res, next) => {
   res.header(
     "Access-Control-Allow-Origin",
-    "https://expense-tracker-dusky-two-83.vercel.app"
+    "http://localhost:5173"
   );
   res.header("Access-Control-Allow-Credentials", "true");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
