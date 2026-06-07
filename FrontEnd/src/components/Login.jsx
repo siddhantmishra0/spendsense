@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 const Login = () => {
-  // const [isRegistering, setIsRegistering] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setIsLoading(true);
     axios
       .post(
         `${import.meta.env.VITE_API_BASE_URL}/login`,
@@ -20,78 +21,135 @@ const Login = () => {
         }
       )
       .then((result) => {
-        console.log(result);
         if (result.data.status === "success") {
+          toast.success("Login successful! Welcome back!");
           navigate("/home");
-          toast.success("Login Successfull, Welcome!");
         }
       })
-
       .catch((err) => {
-        // console.log("Axios handle error ", err);
-        toast.error(err.response.data.error);
-        // toast.error("Invalid credentials")
-      });
+        toast.error(err.response?.data?.error || "Login failed. Please try again.");
+      })
+      .finally(() => setIsLoading(false));
   };
 
   return (
-    <div className="flex items-center justify-center w-screen px-4 mt-4">
-      <div className="bg-white p-6 sm:p-8 rounded-lg w-full max-w-md border-2">
-        {/* Heading */}
-        <h2 className="text-2xl sm:text-2xl font-semibold text-center mb-1">
-          Expense Tracker
-        </h2>
-        <p className="text-center text-gray-500 mb-6 text-sm sm:text-base">
-          Sign in to manage your expenses
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4 py-12">
+      {/* Floating background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl"></div>
+      </div>
 
-        {/* Tabs */}
-        <div className="flex mb-4 bg-gray-100 rounded-lg overflow-hidden border-2">
-          <button
-            // onClick={() => setIsRegistering(false)}
-            className={`w-1/2 py-2 font-medium text-sm sm:text-base transition bg-white shadow text-black`}
-          >
-            Login
-          </button>
-          <button
-            // onClick={() => setIsRegistering(true) }
-            onClick={() => navigate("/register")}
-            className={`w-1/2 py-2 font-medium text-sm sm:text-base transition bg-gray-150 shadow text-gray-500`}
-          >
-            Register
-          </button>
+      <div className="w-full max-w-4xl relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          {/* Left - Visual */}
+          <div className="hidden lg:block">
+            <div className="space-y-8">
+              <div>
+                <h1 className="text-5xl font-bold text-gray-900 mb-4">
+                  Welcome Back
+                </h1>
+                <p className="text-xl text-gray-600">
+                  Track your expenses and take control of your finances
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                {[
+                  { icon: "📊", title: "Real-time Tracking", desc: "Monitor your spending instantly" },
+                  { icon: "📈", title: "Smart Analytics", desc: "Get insights into your patterns" },
+                  { icon: "🎯", title: "Budget Goals", desc: "Set and achieve your targets" },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-start space-x-4">
+                    <span className="text-3xl">{item.icon}</span>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{item.title}</h3>
+                      <p className="text-gray-600 text-sm">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right - Auth Card */}
+          <div className="flex justify-center">
+            <div className="w-full max-w-sm">
+              <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-white/20">
+                {/* Header */}
+                <div className="mb-8">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">$</span>
+                    </div>
+                    <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      SpendSense
+                    </span>
+                  </div>
+                  <p className="text-gray-600">Sign in to your account</p>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                      Username
+                    </label>
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Enter your username"
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? "Signing in..." : "Sign In"}
+                  </button>
+                </form>
+
+                {/* Divider */}
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-200"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-600">New to SpendSense?</span>
+                  </div>
+                </div>
+
+                {/* Sign Up Link */}
+                <button
+                  type="button"
+                  onClick={() => navigate("/register")}
+                  className="w-full py-3 px-4 border-2 border-gray-200 text-gray-900 font-semibold rounded-lg hover:border-blue-600 hover:bg-blue-50 transition"
+                >
+                  Create an Account
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* Register Form */}
-
-        <form
-          className="space-y-4 border rounded-lg p-4 sm:p-6"
-          onSubmit={handleSubmit}
-        >
-          <div>
-            <label className="block mb-1 font-medium text-sm">Username</label>
-            <input
-              type="text"
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-black text-sm"
-              onChange={(e) => setUsername(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium text-sm">Password</label>
-            <input
-              type="password"
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-black text-sm"
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-black text-white py-2 rounded-md hover:bg-gray-800 transition text-sm sm:text-base"
-          >
-            Login
-          </button>
-        </form>
       </div>
     </div>
   );

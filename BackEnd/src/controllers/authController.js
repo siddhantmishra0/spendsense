@@ -79,15 +79,19 @@ const register = async (req, res) => {
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await UserModel.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
     return { accessToken, refreshToken };
   } catch (error) {
+    console.log("Token generation error: ", error);
     throw new ApiError(
       500,
-      "Something went wrong while generating access and refresh token"
+      `Something went wrong while generating access and refresh token: ${error.message}`
     );
   }
 };
