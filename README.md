@@ -1,128 +1,117 @@
-# SpendSense 💸
+# SpendSense 2.0 💸🤖
 
-SpendSense is a comprehensive, modern Budget and Expense Tracking application built using the MERN stack (MongoDB, Express, React, Node.js). It empowers users to take control of their personal finances by tracking budgets, monitoring daily expenses, setting financial goals, and gaining insights through interactive reports.
+SpendSense is a comprehensive, production-ready **AI-powered Personal Finance Platform** built using the MERN stack (MongoDB, Express, React, Node.js). 
+
+Evolving from a robust expense tracker, SpendSense 2.0 introduces deep data intelligence, OCR receipt scanning, gamification, family expense splitting, and a full Progressive Web App (PWA) experience to empower users to take absolute control of their financial health.
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-- **Robust User Authentication**: Secure signup, login, and logout capabilities using JWTs securely stored in HttpOnly cookies.
-- **Interactive Dashboard**: Get a real-time overview of your current financial status at a glance.
-- **Budget Management**: Create, view, update, and securely delete budget allocations for various categories.
-- **Expense Tracking**: Record daily expenses, assign tags, and categorize them effortlessly. Prevents you from exceeding your allocated budget.
-- **Financial Goals (New!)**: Set target savings goals, define deadlines, and visually track your progress with dynamic progress bars.
-- **Advanced Reports & Insights**: Visual representations of spending habits, monthly/weekly trends, and budget utilization using Chart.js.
-- **Export to CSV (New!)**: Download your expense reports directly to a CSV file for offline viewing or accounting purposes.
-- **Dark Mode Support (New!)**: Toggle between light and dark themes seamlessly for comfortable viewing in any environment.
-- **Optimized Performance**: Leverages **React Query** for intelligent data caching, eliminating unnecessary API calls and providing lightning-fast UI updates.
+### 🤖 AI & Data Intelligence
+- **SpendSense AI Assistant**: A globally accessible, context-aware chatbot powered by the Groq LLM that answers your specific financial questions based on your recent activity.
+- **Smart Auto-Categorization**: Natural language parsing automatically assigns categories to your expenses (e.g., typing "Starbucks" auto-selects "Food").
+- **Predictive Health Score**: A dynamic algorithm calculates a 0-100 financial health score based on your budget adherence and tracking consistency.
+- **AI Savings Insights**: Generates actionable, high-impact savings recommendations by analyzing your raw expense data.
+
+### 🧾 Advanced Entry & Automation
+- **AI Receipt Scanner (OCR)**: Upload a receipt image, and client-side `Tesseract.js` combined with our Groq backend will automatically extract the Merchant Name, Total Amount, and Date to magically fill your expense form!
+- **Voice Entry**: Speak your expenses out loud (e.g., *"25 dollars for lunch"*) using the Web Speech API, and the system handles the rest.
+- **CSV Bank Imports**: Bulk import hundreds of transactions instantly via a smart CSV mapper (`PapaParse`) that auto-assigns categories.
+- **Subscriptions Manager**: Track recurring payments (Netflix, Gym) and forecast your true monthly fixed costs.
+
+### 🚀 Wealth & Gamification
+- **Net Worth Tracker**: Dynamically log Assets (Cash, Investments, Real Estate) and Liabilities (Loans, Credit Cards) to track your wealth trajectory over time.
+- **Gamification Engine**: Earn XP, level up, and unlock Badges (e.g., "Consistent Tracker") by hitting budget goals and logging expenses.
+- **Multi-Currency Engine**: Instantly switch between global currencies (USD, EUR, INR, etc.) with real-time formatting across the entire app.
+
+### 🤝 Social & Mobile
+- **Expense Splitting (Splitwise-style)**: Create shared bills with friends, track exactly "who owes who", and settle up debts with one click.
+- **Progressive Web App (PWA)**: Install SpendSense directly to your Desktop, iOS, or Android home screen for a full-screen, native-app experience.
+- **Dark Mode Support**: Seamless toggle between light and dark themes using modern glassmorphism UI tokens.
 
 ---
 
 ## 🛠 Tech Stack
 
 ### Frontend
-- **Framework**: React 19
-- **State Management & Caching**: `@tanstack/react-query`
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS (with Dark Mode integration)
-- **Routing**: React Router DOM v7
+- **Framework**: React 19 + Vite
+- **State Management**: `Zustand` (Global UI) + `@tanstack/react-query` (Server State)
+- **Styling**: Tailwind CSS (Glassmorphism & Gradients)
 - **Data Visualization**: Chart.js & React-Chartjs-2
-- **Icons**: Lucide React
-- **HTTP Client**: Axios
+- **Testing**: Vitest, React Testing Library, jsdom
+- **PWA**: `vite-plugin-pwa`
 
 ### Backend
-- **Runtime Environment**: Node.js
-- **Architecture**: Modular Controller/Router MVC Pattern
-- **Framework**: Express.js
-- **Database**: MongoDB (with Mongoose ORM)
-- **Authentication**: JSON Web Tokens (JWT) & bcrypt for password hashing
-- **CORS**: Configured for secure cross-origin requests
+- **Framework**: Node.js + Express.js
+- **Database**: MongoDB + Mongoose ORM
+- **AI Integration**: Groq SDK (`llama3-8b-8192` model)
+- **Authentication**: JWTs (HttpOnly cookies) & bcrypt
+- **Testing**: Jest, Supertest, MongoDB Memory Server
+
+### CI/CD
+- **GitHub Actions**: Automated dual-pipeline (Frontend & Backend) testing on all pushes to `main`.
 
 ---
 
 ## 📂 Project Structure
 
-The project is built on a highly modular architecture, divided into two main directories:
-
-*   `BackEnd/`: Contains the Node.js/Express server.
-    *   `/controllers`: Domain-specific controllers (`auth`, `budget`, `expense`, `goal`).
-    *   `/routes`: Dedicated express routers for clean API endpoints.
-    *   `/models`: Mongoose database schemas.
-    *   `/middlewares`: JWT validation and error handling.
-*   `FrontEnd/`: Contains the React/Vite application.
-    *   `/src/components`: Reusable UI components (Dashboard, Budget, Expenses, Goals, Reports).
-    *   `/src/context`: React Context providers (like ThemeProvider).
+*   `BackEnd/`: The Node.js/Express API layer.
+    *   `/controllers` & `/routes`: Modular MVC endpoints (`ai`, `expense`, `settlement`, `networth`, etc.)
+    *   `/services`: Complex business logic (AI parsing, OCR, health algorithms).
+    *   `/tests`: Fully isolated `jest` backend test suites using in-memory MongoDB.
+*   `FrontEnd/`: The React/Vite PWA application.
+    *   `/src/components`: Domain-driven component design (Dashboard, AI-Assistant, Splitwise).
+    *   `/src/hooks`: Custom React hooks (e.g., `useCurrencyFormatter`).
+    *   `/src/store`: Zustand global state managers.
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-*   Node.js (v18 or higher recommended)
-*   npm or yarn
-*   MongoDB instance (local or MongoDB Atlas)
+*   Node.js (v18+)
+*   MongoDB instance (local or Atlas)
+*   **Groq API Key** (for AI Assistant & OCR features)
 
-### Setup Instructions
+### Backend Setup
+```bash
+cd BackEnd
+npm install
+```
+Create a `.env` file:
+```env
+PORT=3000
+MONGODB_URL=your_mongodb_connection_string
+CORS_ORIGIN=http://localhost:5173
+ACCESS_TOKEN_SECRET=your_secret
+ACCESS_TOKEN_EXPIRY=1d
+GROQ_API_KEY=your_groq_api_key_here
+```
+Run the development server:
+```bash
+npm run dev
+```
 
-1.  **Clone the repository**:
-    ```bash
-    git clone <repository-url>
-    cd spendsense
-    ```
+### Frontend Setup
+```bash
+cd FrontEnd
+npm install
+```
+Create a `.env` file:
+```env
+VITE_API_BASE_URL=http://localhost:3000
+```
+Run the development server:
+```bash
+npm run dev
+```
 
-2.  **Backend Setup**:
-    *   Navigate to the backend directory:
-        ```bash
-        cd BackEnd
-        ```
-    *   Install dependencies:
-        ```bash
-        npm install
-        ```
-    *   Create a `.env` file based on `.env.sample` and provide the necessary environment variables:
-        ```env
-        PORT=3000
-        MONGODB_URL=your_mongodb_connection_string
-        CORS_ORIGIN=http://localhost:5173
-        ACCESS_TOKEN_SECRET=your_access_secret
-        ACCESS_TOKEN_EXPIRY=1d
-        REFRESH_TOKEN_SECRET=your_refresh_secret
-        REFRESH_TOKEN_EXPIRY=10d
-        ```
-    *   Start the development server:
-        ```bash
-        npm run dev
-        ```
-
-3.  **Frontend Setup**:
-    *   Open a new terminal and navigate to the frontend directory:
-        ```bash
-        cd FrontEnd
-        ```
-    *   Install dependencies:
-        ```bash
-        npm install
-        ```
-    *   Create a `.env` file based on `.env.sample` and provide the backend API URL:
-        ```env
-        VITE_API_BASE_URL=http://localhost:3000
-        ```
-    *   Start the Vite development server:
-        ```bash
-        npm run dev
-        ```
-
-4.  **Access the Application**:
-    *   Open your browser and navigate to the URL provided by Vite (usually `http://localhost:5173`).
+### Testing
+SpendSense includes a robust automated testing suite.
+- **Backend**: `cd BackEnd && npm run test`
+- **Frontend**: `cd FrontEnd && npm run test`
 
 ---
 
-## 💡 Usage Highlights
-
-- **Track Progress**: Visit the **Goals** tab to set a new financial goal (e.g., "Vacation Fund"). Click "Add Funds" to incrementally increase your savings.
-- **Export Data**: Head to the **Reports** tab, select a date range, and click "Export CSV" to download your data instantly.
-- **Dark Mode**: Use the moon/sun icon in the navigation bar to toggle the theme. Your preference is saved across sessions.
-
----
-
-*Built to make personal finance simple, fast, and beautiful.*
+*SpendSense 2.0 – Because your financial data deserves next-generation intelligence.*
