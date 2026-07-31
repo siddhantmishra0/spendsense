@@ -1,4 +1,4 @@
-# SpendSense 2.0 💸🤖
+# SpendSense 💸🤖
 
 SpendSense is a comprehensive, production-ready **AI-powered Personal Finance Platform** built using the MERN stack (MongoDB, Express, React, Node.js). 
 
