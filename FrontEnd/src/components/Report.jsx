@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { useEffect } from "react";
-import axios from "axios"; // Make sure to import axios
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+import { Download } from "lucide-react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,6 +15,7 @@ import {
   ArcElement,
 } from "chart.js";
 import { Pie, Line, Bar } from "react-chartjs-2";
+import useCurrencyFormatter from "../hooks/useCurrencyFormatter";
 
 // Register Chart.js components
 ChartJS.register(
@@ -29,6 +31,7 @@ ChartJS.register(
 );
 
 function Report(props) {
+  const { formatAmount } = useCurrencyFormatter();
   const [reportType, setReportType] = React.useState("By category");
   const [loading, setLoading] = React.useState(true);
   const [chartData, setChartData] = React.useState(null);
@@ -72,6 +75,33 @@ function Report(props) {
     } catch (error) {
       console.log("Error while fetching expenses ", error);
     }
+  };
+
+  const exportToCSV = () => {
+    const filteredExpenses = filterExpensesByDateRange(expenses, dateFrom, dateTo);
+    if (filteredExpenses.length === 0) {
+      alert("No data to export for this date range.");
+      return;
+    }
+
+    const headers = ["Date,Category,Amount,Description\n"];
+    const csvData = filteredExpenses.map(exp => {
+      const date = new Date(exp.date || exp.createdAt).toLocaleDateString();
+      const category = `"${exp.category || "Other"}"`;
+      const amount = exp.amount;
+      const description = `"${(exp.description || "").replace(/"/g, '""')}"`;
+      return `${date},${category},${amount},${description}\n`;
+    });
+
+    const blob = new Blob([...headers, ...csvData], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `expenses_report_${dateFrom}_to_${dateTo}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   };
 
   useEffect(() => {
@@ -449,7 +479,7 @@ function Report(props) {
         beginAtZero: true,
         title: {
           display: true,
-          text: "Amount ($)",
+          text: "Amount",
         },
       },
     },
@@ -466,30 +496,30 @@ function Report(props) {
               Expense Summary
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-              <div className="rounded-md bg-gray-100 p-4">
-                <div className="text-gray-500 text-sm md:text-base">
+              <div className="rounded-md bg-gray-100 dark:bg-gray-800 p-4">
+                <div className="text-gray-500 dark:text-gray-300 text-sm md:text-base">
                   Total Expenses
                 </div>
                 <div className="font-bold text-xl md:text-2xl">
-                  ${summaryData.totalExpenses}
+                  {formatAmount(summaryData.totalExpenses)}
                 </div>
               </div>
-              <div className="rounded-md bg-gray-100 p-4">
-                <div className="text-gray-500 text-sm md:text-base">
+              <div className="rounded-md bg-gray-100 dark:bg-gray-800 p-4">
+                <div className="text-gray-500 dark:text-gray-300 text-sm md:text-base">
                   Average Daily
                 </div>
                 <div className="font-bold text-xl md:text-2xl">
-                  ${summaryData.averageDaily}
+                  {formatAmount(summaryData.averageDaily)}
                 </div>
               </div>
-              <div className="rounded-md bg-gray-100 p-4">
-                <div className="text-gray-500 text-sm md:text-base">
+              <div className="rounded-md bg-gray-100 dark:bg-gray-800 p-4">
+                <div className="text-gray-500 dark:text-gray-300 text-sm md:text-base">
                   Highest Expense
                 </div>
                 <div className="font-bold text-xl md:text-2xl">
-                  ${summaryData.highestExpense.amount}
+                  {formatAmount(summaryData.highestExpense.amount)}
                 </div>
-                <div className="text-gray-500 text-sm md:text-base">
+                <div className="text-gray-500 dark:text-gray-300 text-sm md:text-base">
                   {summaryData.highestExpense.category}
                 </div>
               </div>
@@ -531,32 +561,32 @@ function Report(props) {
               Spending Insights
             </div>
             <div className="grid grid-cols-1 gap-4 mt-4">
-              <div className="rounded-md p-4 bg-gray-100">
+              <div className="rounded-md p-4 bg-gray-100 dark:bg-gray-800">
                 <div className="font-semibold text-sm md:text-base">
                   Top Spending Category
                 </div>
                 <div className="font-bold text-xl md:text-2xl">
-                  {topCategory.category} (${topCategory.amount.toFixed(2)})
+                  {topCategory.category} ({formatAmount(topCategory.amount)})
                 </div>
-                <div className="text-gray-500 text-sm md:text-base">
+                <div className="text-gray-500 dark:text-gray-300 text-sm md:text-base">
                   {totalAmount > 0
                     ? ((topCategory.amount / totalAmount) * 100).toFixed(1)
                     : 0}
                   % of total expenses
                 </div>
               </div>
-              <div className="rounded-md p-4 bg-gray-100">
+              <div className="rounded-md p-4 bg-gray-100 dark:bg-gray-800">
                 <div className="font-semibold text-sm md:text-base">
                   Total Categories
                 </div>
                 <div className="font-bold text-xl md:text-2xl">
                   {Object.keys(categoryData).length} categories
                 </div>
-                <div className="text-gray-500 text-sm md:text-base">
+                <div className="text-gray-500 dark:text-gray-300 text-sm md:text-base">
                   Across {filteredExpenses.length} transactions
                 </div>
               </div>
-              <div className="rounded-md p-4 bg-gray-100">
+              <div className="rounded-md p-4 bg-gray-100 dark:bg-gray-800">
                 <div className="font-semibold text-sm md:text-base">
                   Period Range
                 </div>
@@ -567,7 +597,7 @@ function Report(props) {
                   )}{" "}
                   days
                 </div>
-                <div className="text-gray-500 text-sm md:text-base">
+                <div className="text-gray-500 dark:text-gray-300 text-sm md:text-base">
                   From {dateFrom} to {dateTo}
                 </div>
               </div>
@@ -581,30 +611,30 @@ function Report(props) {
               Expense Summary
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-              <div className="rounded-md bg-gray-100 p-4">
-                <div className="text-gray-500 text-sm md:text-base">
+              <div className="rounded-md bg-gray-100 dark:bg-gray-800 p-4">
+                <div className="text-gray-500 dark:text-gray-300 text-sm md:text-base">
                   Total Expenses
                 </div>
                 <div className="font-bold text-xl md:text-2xl">
-                  ${summaryData.totalExpenses}
+                  {formatAmount(summaryData.totalExpenses)}
                 </div>
               </div>
-              <div className="rounded-md bg-gray-100 p-4">
-                <div className="text-gray-500 text-sm md:text-base">
+              <div className="rounded-md bg-gray-100 dark:bg-gray-800 p-4">
+                <div className="text-gray-500 dark:text-gray-300 text-sm md:text-base">
                   Average Daily
                 </div>
                 <div className="font-bold text-xl md:text-2xl">
-                  ${summaryData.averageDaily}
+                  {formatAmount(summaryData.averageDaily)}
                 </div>
               </div>
-              <div className="rounded-md bg-gray-100 p-4">
-                <div className="text-gray-500 text-sm md:text-base">
+              <div className="rounded-md bg-gray-100 dark:bg-gray-800 p-4">
+                <div className="text-gray-500 dark:text-gray-300 text-sm md:text-base">
                   Highest Expense
                 </div>
                 <div className="font-bold text-xl md:text-2xl">
-                  ${summaryData.highestExpense.amount}
+                  {formatAmount(summaryData.highestExpense.amount)}
                 </div>
-                <div className="text-gray-500 text-sm md:text-base">
+                <div className="text-gray-500 dark:text-gray-300 text-sm md:text-base">
                   {summaryData.highestExpense.category}
                 </div>
               </div>
@@ -621,46 +651,56 @@ function Report(props) {
           <div className="font-semibold text-xl md:text-2xl">
             Expense Reports
           </div>
-          <div className="text-sm md:text-base text-gray-500">
+          <div className="text-sm md:text-base text-gray-500 dark:text-gray-400">
             Visualize your spending patterns
           </div>
 
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 mt-4">
-            <div className="flex items-center gap-2 w-full md:w-auto">
-              <input
-                type="date"
-                className="border rounded-md p-2 text-sm w-full"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-              />
-              <span className="text-sm">to</span>
-              <input
-                type="date"
-                className="border rounded-md p-2 text-sm w-full"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-              />
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mt-4">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 w-full">
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <input
+                  type="date"
+                  className="border rounded-md p-2 text-sm w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                />
+                <span className="text-sm">to</span>
+                <input
+                  type="date"
+                  className="border rounded-md p-2 text-sm w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                />
+              </div>
+              <select
+                id="category"
+                className="border rounded-md p-2 text-sm w-full md:w-auto mt-2 md:mt-0 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                value={reportType}
+                onChange={(e) => setReportType(e.target.value)}
+              >
+                <option value="By category">By category</option>
+                <option value="Monthly Trend">Monthly Trend</option>
+                <option value="Weekly Trend">Weekly Trend</option>
+              </select>
             </div>
-            <select
-              id="category"
-              className="border rounded-md p-2 text-sm w-full md:w-auto mt-2 md:mt-0"
-              value={reportType}
-              onChange={(e) => setReportType(e.target.value)}
+            
+            <button 
+              onClick={exportToCSV}
+              className="flex items-center justify-center gap-2 bg-black dark:bg-white dark:bg-gray-800 text-white dark:text-black px-4 py-2 rounded-md text-sm whitespace-nowrap hover:bg-gray-800 dark:hover:bg-gray-200 dark:bg-gray-700 transition-colors w-full md:w-auto"
             >
-              <option value="By category">By category</option>
-              <option value="Monthly Trend">Monthly Trend</option>
-              <option value="Weekly Trend">Weekly Trend</option>
-            </select>
+              <Download size={16} />
+              Export CSV
+            </button>
           </div>
 
           <div className="h-64 md:h-80 mt-6">{renderChart()}</div>
         </div>
 
-        <div className="grid grid-cols-3 w-full rounded-md mt-4 bg-gray-100">
+        <div className="grid grid-cols-3 w-full rounded-md mt-4 bg-gray-100 dark:bg-gray-700 p-1">
           <button
             value="Summary"
-            className={`rounded-md py-2 px-1 md:px-2 m-1 text-sm md:text-base ${
-              buttonType === "Summary" ? "bg-white" : "text-gray-500"
+            className={`rounded-md py-2 px-1 md:px-2 text-sm md:text-base transition-colors ${
+              buttonType === "Summary" ? "bg-white dark:bg-gray-800 text-black dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:text-gray-100 dark:hover:text-gray-100"
             }`}
             onClick={(e) => setButtonType(e.target.value)}
           >
@@ -668,8 +708,8 @@ function Report(props) {
           </button>
           <button
             value="Comparision"
-            className={`rounded-md py-2 px-1 md:px-2 m-1 text-sm md:text-base ${
-              buttonType === "Comparision" ? "bg-white" : "text-gray-500"
+            className={`rounded-md py-2 px-1 md:px-2 text-sm md:text-base transition-colors ${
+              buttonType === "Comparision" ? "bg-white dark:bg-gray-800 text-black dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:text-gray-100 dark:hover:text-gray-100"
             }`}
             onClick={(e) => setButtonType(e.target.value)}
           >
@@ -677,8 +717,8 @@ function Report(props) {
           </button>
           <button
             value="Insights"
-            className={`rounded-md py-2 px-1 md:px-2 m-1 text-sm md:text-base ${
-              buttonType === "Insights" ? "bg-white" : "text-gray-500"
+            className={`rounded-md py-2 px-1 md:px-2 text-sm md:text-base transition-colors ${
+              buttonType === "Insights" ? "bg-white dark:bg-gray-800 text-black dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:text-gray-100 dark:hover:text-gray-100"
             }`}
             onClick={(e) => setButtonType(e.target.value)}
           >

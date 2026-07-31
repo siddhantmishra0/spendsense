@@ -24,7 +24,51 @@ const UserSchema = new mongoose.Schema({
   refreshToken: {
     type: String,
   },
-});
+  preferences: {
+    currency: {
+      type: String,
+      default: "INR"
+    }
+  },
+  healthScore: {
+    score: {
+      type: Number,
+      default: 0
+    },
+    lastCalculated: {
+      type: Date,
+      default: Date.now
+    }
+  },
+  gamification: {
+    points: {
+      type: Number,
+      default: 0
+    },
+    level: {
+      type: Number,
+      default: 1
+    },
+    badges: [{
+      name: String,
+      earnedAt: { type: Date, default: Date.now },
+      description: String,
+      icon: String
+    }],
+    currentStreak: {
+      type: Number,
+      default: 0
+    },
+    longestStreak: {
+      type: Number,
+      default: 0
+    },
+    lastActivity: {
+      type: Date,
+      default: null
+    }
+  }
+}, { timestamps: true });
 
 // checks whether the password is modified or not, hashes the password if modified
 UserSchema.pre("save",async function (next) {

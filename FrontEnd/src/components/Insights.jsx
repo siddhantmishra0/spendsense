@@ -9,8 +9,10 @@ import {
   Loader,
 } from "lucide-react";
 import axios from "axios";
+import useCurrencyFormatter from "../hooks/useCurrencyFormatter";
 
 function Insights() {
+  const { formatAmount } = useCurrencyFormatter();
   const [buttonType, setButtonType] = useState("Recommendations");
   const [userId, setUserId] = useState("");
   const [expenses, setExpenses] = useState([]);
@@ -216,99 +218,26 @@ function Insights() {
 
   // Analyze spending patterns and generate recommendations
   const analyzeSpendingPatterns = async (expenseData) => {
-    // Simulate analysis delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/ai/insights`, {
+        userId
+      }, { withCredentials: true });
+      
+      const groqResponse = res.data;
+      
+      // format potential as currency string if it is a number
+      if (groqResponse && groqResponse.recommendations) {
+        groqResponse.recommendations = groqResponse.recommendations.map(rec => ({
+          ...rec,
+          potential: formatAmount(rec.potential)
+        }));
+      }
 
-    const recommendations = [];
-    let totalSavings = 0;
-
-    // Analyze spending patterns and generate recommendations
-    const sortedCategories = Object.entries(expenseData.categoryAnalysis).sort(
-      (a, b) => b[1] - a[1]
-    );
-
-    // High spending category recommendation
-    if (sortedCategories.length > 0) {
-      const [topCategory, amount] = sortedCategories[0];
-      const potential = amount * 0.2; // Assume 20% reduction potential
-      totalSavings += potential;
-
-      recommendations.push({
-        title: `Reduce ${topCategory.toLowerCase()} expenses`,
-        impact:
-          amount > 300
-            ? "High Impact"
-            : amount > 150
-            ? "Medium Impact"
-            : "Low Impact",
-        subtitle: `You spent ${amount.toFixed(
-          2
-        )} on ${topCategory.toLowerCase()} recently. Consider ways to optimize this spending.`,
-        potential: potential.toFixed(2),
-      });
+      return groqResponse;
+    } catch (error) {
+      console.error("Error fetching AI insights from backend:", error);
+      throw error; // Let generateInsights handle the fallback
     }
-
-    // Frequent small transactions
-    if (expenseData.averageTransaction < 25 && expenseData.expenseCount > 20) {
-      const potential =
-        expenseData.averageTransaction * expenseData.expenseCount * 0.15;
-      totalSavings += potential;
-
-      recommendations.push({
-        title: "Consolidate small purchases",
-        impact: "Medium Impact",
-        subtitle: `You made ${
-          expenseData.expenseCount
-        } transactions with an average of ${expenseData.averageTransaction.toFixed(
-          2
-        )}. Bulk buying could save money.`,
-        potential: potential.toFixed(2),
-      });
-    }
-
-    // Subscription optimization (if entertainment/services category exists)
-    const subscriptionCategories = [
-      "Entertainment",
-      "Services",
-      "Subscriptions",
-    ];
-    const subscriptionSpending = subscriptionCategories.reduce(
-      (total, cat) => total + (expenseData.categoryAnalysis[cat] || 0),
-      0
-    );
-
-    if (subscriptionSpending > 50) {
-      const potential = subscriptionSpending * 0.3;
-      totalSavings += potential;
-
-      recommendations.push({
-        title: "Review subscription services",
-        impact: "Medium Impact",
-        subtitle: `You're spending ${subscriptionSpending.toFixed(
-          2
-        )} on subscriptions. Cancel unused services to save money.`,
-        potential: potential.toFixed(2),
-      });
-    }
-
-    // Generic saving tip if we have less than 3 recommendations
-    if (recommendations.length < 3) {
-      const potential = expenseData.totalExpenses * 0.1;
-      totalSavings += potential;
-
-      recommendations.push({
-        title: "Track daily expenses",
-        impact: "Low Impact",
-        subtitle:
-          "Studies show that people who track daily expenses reduce spending by 10-15% on average.",
-        potential: potential.toFixed(2),
-      });
-    }
-
-    return {
-      recommendations,
-      totalSavingsPotential: totalSavings,
-    };
   };
 
   const generateRuleBasedInsights = () => {
@@ -319,14 +248,14 @@ function Insights() {
         impact: "High Impact",
         subtitle:
           "Focus on your biggest spending category for maximum savings potential.",
-        potential: "50.00",
+        potential: formatAmount(50),
       },
       {
         title: "Set weekly spending limits",
         impact: "Medium Impact",
         subtitle:
           "Create weekly budgets for discretionary spending to avoid overspending.",
-        potential: "75.00",
+        potential: formatAmount(75),
       },
     ];
   };
@@ -397,7 +326,7 @@ function Insights() {
             subtitle: `Unusual spending increase of ${percentageChange.toFixed(
               1
             )}% compared to your 3-month average`,
-            anomalies: `$${(currentAmount - historicalAverage).toFixed(2)}`,
+            anomalies: formatAmount(currentAmount - historicalAverage),
           });
         }
       }
@@ -410,7 +339,7 @@ function Insights() {
           logo: "correct",
           title: category,
           subtitle: `New spending category detected this month`,
-          anomalies: `$${currentCategories[category].toFixed(2)}`,
+          anomalies: formatAmount(currentCategories[category]),
         });
       }
     });
@@ -449,7 +378,7 @@ function Insights() {
                 />
               ))
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-300">
                 No recommendations available. Add more expenses to get
                 personalized insights.
               </div>
@@ -470,7 +399,7 @@ function Insights() {
                 />
               ))
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-300">
                 No unusual spending patterns detected. Your spending looks
                 normal!
               </div>
@@ -528,12 +457,12 @@ function Insights() {
             <div className="font-semibold text-lg">{props.title}</div>
             <RenderImpact type={props.impact} />
           </div>
-          <div className="text-gray-500 mt-2 mb-4">{props.subtitle}</div>
+          <div className="text-gray-500 dark:text-gray-300 mt-2 mb-4">{props.subtitle}</div>
         </div>
         <hr />
         <div className="m-6">
           <div className="flex justify-between">
-            <div className="text-gray-500 text-sm">Potential Savings</div>
+            <div className="text-gray-500 dark:text-gray-300 text-sm">Potential Savings</div>
             <div className="text-green-500 font-semibold text-lg">
               {props.potential}
             </div>
@@ -554,7 +483,7 @@ function Insights() {
             </div>
             <div className="font-semibold text-lg">{props.anomalies}</div>
           </div>
-          <div className="text-gray-500 mt-2 mb-4">{props.subtitle}</div>
+          <div className="text-gray-500 dark:text-gray-300 mt-2 mb-4">{props.subtitle}</div>
         </div>
       </div>
     );
@@ -568,12 +497,12 @@ function Insights() {
             <Sparkles />
             <div className="text-3xl font-bold">Financial Insights</div>
           </div>
-          <div className="text-gray-500">
+          <div className="text-gray-500 dark:text-gray-300">
             Personalized recommendations based on your spending patterns
           </div>
         </div>
         <button
-          className="border rounded-md p-2 pl-4 pr-4 flex gap-2 hover:bg-gray-100 disabled:opacity-50"
+          className="border rounded-md p-2 pl-4 pr-4 flex gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 disabled:opacity-50"
           onClick={refreshInsights}
           disabled={loading}
         >
@@ -586,14 +515,14 @@ function Insights() {
 
       <div className="border rounded-md p-4 mt-4">
         <div className="text-2xl font-bold">Monthly Summary</div>
-        <div className="text-gray-500">Overview of your financial health</div>
+        <div className="text-gray-500 dark:text-gray-300">Overview of your financial health</div>
         <div className="grid grid-cols-3 mt-4">
           <div>
-            <div className="text-gray-500 font-semibold text-sm">
+            <div className="text-gray-500 dark:text-gray-300 font-semibold text-sm">
               Monthly Spending
             </div>
             <div className="font-bold text-3xl">
-              ${monthlyStats.totalSpending.toFixed(2)}
+              {formatAmount(monthlyStats.totalSpending)}
             </div>
             <div
               className={`flex items-center ${
@@ -613,36 +542,36 @@ function Insights() {
             </div>
           </div>
           <div>
-            <div className="text-sm font-semibold text-gray-500">
+            <div className="text-sm font-semibold text-gray-500 dark:text-gray-300">
               Top spending Category
             </div>
             <div className="font-bold text-3xl">
               {monthlyStats.topCategory.name}
             </div>
-            <div className="text-sm font-semibold text-gray-500">
-              ${monthlyStats.topCategory.amount.toFixed(2)} (
+            <div className="text-sm font-semibold text-gray-500 dark:text-gray-300">
+              {formatAmount(monthlyStats.topCategory.amount)} (
               {monthlyStats.topCategory.percentage.toFixed(1)}% of total)
             </div>
           </div>
           <div>
-            <div className="text-sm font-semibold text-gray-500">
+            <div className="text-sm font-semibold text-gray-500 dark:text-gray-300">
               Savings Potential
             </div>
             <div className="text-green-500 font-bold text-3xl">
-              ${monthlyStats.savingsPotential.toFixed(2)}
+              {formatAmount(monthlyStats.savingsPotential)}
             </div>
-            <div className="text-gray-500">
+            <div className="text-gray-500 dark:text-gray-300">
               Potential monthly savings based on our recommendations
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 w-full rounded-md mt-6 bg-gray-100">
+      <div className="grid grid-cols-2 w-full rounded-md mt-6 bg-gray-100 dark:bg-gray-800">
         <button
           value="Recommendations"
           className={`rounded-md py-2 px-1 md:px-2 m-1 text-sm md:text-base ${
-            buttonType === "Recommendations" ? "bg-white" : "text-gray-500"
+            buttonType === "Recommendations" ? "bg-white dark:bg-gray-800" : "text-gray-500 dark:text-gray-300"
           }`}
           onClick={(e) => setButtonType(e.target.value)}
         >
@@ -651,7 +580,7 @@ function Insights() {
         <button
           value="Spending"
           className={`rounded-md py-2 px-1 md:px-2 m-1 text-sm md:text-base ${
-            buttonType === "Spending" ? "bg-white" : "text-gray-500"
+            buttonType === "Spending" ? "bg-white dark:bg-gray-800" : "text-gray-500 dark:text-gray-300"
           }`}
           onClick={(e) => setButtonType(e.target.value)}
         >

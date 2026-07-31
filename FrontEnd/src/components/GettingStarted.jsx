@@ -1,17 +1,19 @@
 
 import { useNavigate } from "react-router-dom"
+import useCurrencyFormatter from "../hooks/useCurrencyFormatter";
 
 export default function GettingStarted() {
     const navigate = useNavigate();
+    const { formatAmount, currencySymbol } = useCurrencyFormatter();
   return (
-    <div className="min-h-screen bg-white overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-gray-800 overflow-hidden">
       {/* Navigation */}
-      <nav className="fixed w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
+      <nav className="fixed w-full bg-white dark:bg-gray-800/80 backdrop-blur-md z-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">$</span>
+                <span className="text-white font-bold text-lg">{currencySymbol}</span>
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 SpendSense
@@ -20,7 +22,7 @@ export default function GettingStarted() {
             <div className="flex space-x-3">
               <button
                 onClick={() => navigate("/login")}
-                className="px-5 py-2 text-gray-700 font-medium hover:text-gray-900 transition-colors"
+                className="px-5 py-2 text-gray-700 dark:text-gray-100 font-medium hover:text-gray-900 dark:text-white transition-colors"
               >
                 Sign In
               </button>
@@ -46,14 +48,14 @@ export default function GettingStarted() {
                 <span className="text-sm font-semibold text-blue-600">Join thousands of smart savers</span>
               </div>
 
-              <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+              <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
                 Master Your Money,
                 <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent block">
                   Effortlessly
                 </span>
               </h1>
 
-              <p className="text-xl text-gray-600 leading-relaxed max-w-lg">
+              <p className="text-xl text-gray-600 dark:text-gray-200 leading-relaxed max-w-lg">
                 Stop wondering where your money goes. SpendSense gives you crystal-clear insights into your spending patterns with beautiful visualizations and actionable analytics.
               </p>
 
@@ -66,13 +68,13 @@ export default function GettingStarted() {
                 </button>
                 <button
                   onClick={() => navigate("/login")}
-                  className="px-8 py-4 bg-gray-100 text-gray-900 font-semibold rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-8 py-4 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-semibold rounded-lg hover:bg-gray-200 dark:bg-gray-700 transition-colors"
                 >
                   Already have an account?
                 </button>
               </div>
 
-              <div className="flex items-center space-x-8 pt-8 text-sm text-gray-600">
+              <div className="flex items-center space-x-8 pt-8 text-sm text-gray-600 dark:text-gray-200">
                 <div>✓ No credit card required</div>
                 <div>✓ Free forever</div>
               </div>
@@ -84,27 +86,27 @@ export default function GettingStarted() {
               <div className="relative bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 border border-blue-100">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-semibold text-gray-700">Monthly Budget</div>
-                    <span className="text-2xl font-bold text-blue-600">$2,450</span>
+                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-100">Monthly Budget</div>
+                    <span className="text-2xl font-bold text-blue-600">{formatAmount(2450)}</span>
                   </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div className="h-full w-3/4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
                   </div>
-                  <div className="text-xs text-gray-600">$1,837.50 spent</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-200">{formatAmount(1837.50)} spent</div>
                 </div>
 
                 <div className="mt-8 space-y-3">
                   {[
-                    { category: "Food & Dining", amount: "$385", color: "from-orange-400 to-orange-600" },
-                    { category: "Transportation", amount: "$420", color: "from-blue-400 to-blue-600" },
-                    { category: "Entertainment", amount: "$290", color: "from-purple-400 to-purple-600" },
+                    { category: "Food & Dining", amount: formatAmount(385), color: "from-orange-400 to-orange-600" },
+                    { category: "Transportation", amount: formatAmount(420), color: "from-blue-400 to-blue-600" },
+                    { category: "Entertainment", amount: formatAmount(290), color: "from-purple-400 to-purple-600" },
                   ].map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100">
+                    <div key={idx} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-100">
                       <div className="flex items-center space-x-3">
                         <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${item.color}`}></div>
-                        <span className="text-sm text-gray-700">{item.category}</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-100">{item.category}</span>
                       </div>
-                      <span className="font-semibold text-gray-900">{item.amount}</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{item.amount}</span>
                     </div>
                   ))}
                 </div>
@@ -118,8 +120,8 @@ export default function GettingStarted() {
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Powerful Features</h2>
-            <p className="text-lg text-gray-600">Everything you need to take control of your finances</p>
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">Powerful Features</h2>
+            <p className="text-lg text-gray-600 dark:text-gray-200">Everything you need to take control of your finances</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -148,8 +150,8 @@ export default function GettingStarted() {
                 className={`p-8 rounded-2xl bg-gradient-to-br ${feature.gradient} border border-gray-100 hover:shadow-lg transition-shadow duration-300`}
               >
                 <div className="text-5xl mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-gray-700">{feature.description}</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{feature.title}</h3>
+                <p className="text-gray-700 dark:text-gray-100">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -165,7 +167,7 @@ export default function GettingStarted() {
               <div className="text-blue-100">Active Users</div>
             </div>
             <div>
-              <div className="text-5xl font-bold mb-2">$2B+</div>
+              <div className="text-5xl font-bold mb-2">{currencySymbol}2B+</div>
               <div className="text-blue-100">Tracked Expenses</div>
             </div>
             <div>
@@ -179,10 +181,10 @@ export default function GettingStarted() {
       {/* CTA Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-gray-900 mb-6">
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
             Ready to take control?
           </h2>
-          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 dark:text-gray-200 mb-8 max-w-2xl mx-auto">
             Join thousands of people who are making smarter financial decisions with SpendSense. Start your free journey today.
           </p>
           <button

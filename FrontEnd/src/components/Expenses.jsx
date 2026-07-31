@@ -1,78 +1,207 @@
-import React, { useState, useEffect } from "react";
-import { Trash } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { Trash, Sparkles, Loader2, Camera, Upload, Mic } from "lucide-react";
+import toast from "react-hot-toast";
+import Tesseract from "tesseract.js";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
+import Papa from "papaparse";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import useCurrencyFormatter from "../hooks/useCurrencyFormatter";
 
 function Expenses() {
-  const [expenses, setExpenses] = useState([]);
+  const queryClient = useQueryClient();
+  const { formatAmount } = useCurrencyFormatter();
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
   const [category, setCategory] = useState("Food");
   const [tags, setTags] = useState("");
-  const [userId, setUserId] = useState("");
-  const [budget, setBudget] = useState([]);
   const [budgetError, setBudgetError] = useState("");
+  const [isCategorizing, setIsCategorizing] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [isUploadingCSV, setIsUploadingCSV] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [scanProgress, setScanProgress] = useState("");
+  const fileInputRef = useRef(null);
+  const csvInputRef = useRef(null);
 
-  useEffect(() => {
-    axios
-      .get(`${import.meta.env.VITE_API_BASE_URL}/login`, {
+  const handleScanReceipt = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsScanning(true);
+    setScanProgress("Reading image...");
+    
+    try {
+      const { data: { text } } = await Tesseract.recognize(
+        file,
+        'eng',
+        { logger: m => {
+          if (m.status === 'recognizing text') {
+            setScanProgress(`Scanning: ${Math.round(m.progress * 100)}%`);
+          }
+        }}
+      );
+      
+      setScanProgress("AI Parsing...");
+      
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/ai/receipt`, { text }, { withCredentials: true });
+      const { merchantName, amount: parsedAmount, date: parsedDate } = res.data;
+      
+      if (merchantName) setDescription(merchantName);
+      if (parsedAmount) setAmount(parsedAmount);
+      if (parsedDate) setDate(parsedDate);
+      
+      toast.success("Receipt scanned successfully!");
+    } catch (err) {
+      console.error("OCR Error", err);
+      toast.error("Failed to scan receipt");
+    } finally {
+      setIsScanning(false);
+      setScanProgress("");
+      if (fileInputRef.current) fileInputRef.current.value = null;
+    }
+  };
+
+  const handleCSVUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsUploadingCSV(true);
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const rows = results.data;
+          const mappedExpenses = rows.map(row => {
+            const description = row.Description || row.description || row.Name || row.name || "Imported Expense";
+            const amount = row.Amount || row.amount || row.Cost || row.cost || "0";
+            const date = row.Date || row.date || new Date().toISOString();
+            const category = row.Category || row.category || "Other";
+            return { description, amount: Math.abs(Number(amount)), date, category, tags: [] };
+          });
+          await axios.post(`${import.meta.env.VITE_API_BASE_URL}/home/expense/bulk`, { expenses: mappedExpenses, userId }, { withCredentials: true });
+          toast.success("Expenses imported successfully!");
+          queryClient.invalidateQueries({ queryKey: ["expenses", userId] });
+        } catch (err) {
+          toast.error("Failed to import CSV");
+        } finally {
+          setIsUploadingCSV(false);
+          if (csvInputRef.current) csvInputRef.current.value = null;
+        }
+      }
+    });
+  };
+
+  const handleVoiceEntry = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Voice recognition is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      toast.success("Listening... Describe your expense!", { icon: '🎙️' });
+    };
+
+    recognition.onresult = (event) => {
+      const speechResult = event.results[0][0].transcript;
+      toast.success(`Heard: "${speechResult}"`);
+      
+      const parsedAmount = speechResult.match(/\d+(\.\d{1,2})?/);
+      if (parsedAmount) setAmount(parsedAmount[0]);
+      
+      const textWithoutAmount = speechResult.replace(/\d+(\.\d{1,2})?/, '').replace(/dollars?|rupees?|bucks?/ig, '').trim();
+      setDescription(textWithoutAmount || speechResult);
+    };
+
+    recognition.onerror = (event) => {
+      console.error(event.error);
+      setIsListening(false);
+      toast.error("Voice recognition failed. Please try again.");
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
+  const handleAutoCategorize = async () => {
+    if (!description) {
+      toast.error("Please enter a description first");
+      return;
+    }
+    setIsCategorizing(true);
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/ai/categorize`, {
+        description
+      }, { withCredentials: true });
+      if (res.data.category) {
+        setCategory(res.data.category);
+        toast.success(`Categorized as ${res.data.category}`);
+        setBudgetError("");
+      }
+    } catch (error) {
+      console.error("Categorize error:", error);
+      toast.error("Failed to auto-categorize");
+    } finally {
+      setIsCategorizing(false);
+    }
+  };
+
+  const { data: user } = useQuery({
+    queryKey: ["user"],
+    queryFn: async () => {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/login`, {
         withCredentials: true,
-      })
-      .then((response) => setUserId(response.data.user._id))
-      .catch((error) => {
-        console.log("Fetch error: ", error);
-        window.location.href = "/";
       });
-  }, []);
+      return response.data.user;
+    },
+    onError: () => window.location.href = "/"
+  });
+  const userId = user?._id;
 
-  const fetchExpenses = async () => {
-    if (!userId) return;
-    try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/home/expense?userId=${userId}`,
-        { withCredentials: true }
-      );
-      setExpenses(res.data);
-    } catch (error) {
-      console.log("Error while fetching expenses ", error);
-    }
-  };
+  const { data: expenses = [] } = useQuery({
+    queryKey: ["expenses", userId],
+    queryFn: async () => {
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/home/expense?userId=${userId}`, {
+        withCredentials: true,
+      });
+      return res.data;
+    },
+    enabled: !!userId,
+  });
 
-  const fetchBudget = async () => {
-    if (!userId) return;
-    try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/home/budget?userId=${userId}`,
-        { withCredentials: true }
-      );
-      setBudget(res.data);
-    } catch (error) {
-      console.log("Error while fetching budgets ", error);
-    }
-  };
+  const { data: budget = [] } = useQuery({
+    queryKey: ["budgets", userId],
+    queryFn: async () => {
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/home/budget?userId=${userId}`, {
+        withCredentials: true,
+      });
+      return res.data;
+    },
+    enabled: !!userId,
+  });
 
-  useEffect(() => {
-    if (userId) {
-      fetchExpenses();
-      fetchBudget();
-    }
-  }, [userId]);
-
-  // Calculate total spent for a specific category
   const getTotalSpentForCategory = (categoryName) => {
     return expenses
       .filter((expense) => expense.category === categoryName)
       .reduce((total, expense) => total + expense.amount, 0);
   };
 
-  // Get budget limit for a specific category
   const getBudgetForCategory = (categoryName) => {
     const categoryBudget = budget.find((b) => b.category === categoryName);
     return categoryBudget ? categoryBudget.amount : 0;
   };
 
-  // Check if adding this expense would exceed the budget
   const validateBudget = (categoryName, expenseAmount) => {
     const currentSpent = getTotalSpentForCategory(categoryName);
     const budgetLimit = getBudgetForCategory(categoryName);
@@ -89,77 +218,77 @@ function Expenses() {
       const remaining = budgetLimit - currentSpent;
       return {
         isValid: false,
-        message: `This expense would exceed your ${categoryName} budget. Budget: $${budgetLimit}, Already spent: $${currentSpent}, Remaining: $${remaining}`,
+        message: `This expense would exceed your ${categoryName} budget. Budget: ${formatAmount(budgetLimit)}, Already spent: ${formatAmount(currentSpent)}, Remaining: ${formatAmount(remaining)}`,
       };
     }
 
     return { isValid: true, message: "" };
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setBudgetError("");
-
-    const expenseAmount = parseFloat(amount);
-
-    // Validate budget before submitting
-    const validation = validateBudget(category, expenseAmount);
-
-    if (!validation.isValid) {
-      setBudgetError(validation.message);   
-      return;
-    }
-
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/home/expense`,
-        {
-          description,
-          amount: expenseAmount,
-          date,
-          category,
-          tags: tags.split(",").map((tag) => tag.trim()),
-          userId,
-          budget,
-        },
-        {
-          withCredentials: true,
-        }
-      );
-
-      // Reset form
+  const addExpenseMutation = useMutation({
+    mutationFn: async (expenseData) => {
+      return await axios.post(`${import.meta.env.VITE_API_BASE_URL}/home/expense`, expenseData, {
+        withCredentials: true,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["expenses", userId] });
+      queryClient.invalidateQueries({ queryKey: ["budgets", userId] });
       setDescription("");
       setAmount("");
       setDate("");
       setCategory("Food");
       setTags("");
       setBudgetError("");
-
-      // Refresh data
-      fetchExpenses();
-      fetchBudget();
-    } catch (error) {
+    },
+    onError: (error) => {
       console.log("Error while posting expense ", error);
     }
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setBudgetError("");
+    const expenseAmount = parseFloat(amount);
+    const validation = validateBudget(category, expenseAmount);
+
+    if (!validation.isValid) {
+      setBudgetError(validation.message);
+      return;
+    }
+
+    addExpenseMutation.mutate({
+      description,
+      amount: expenseAmount,
+      date,
+      category,
+      tags: tags.split(",").map((tag) => tag.trim()),
+      userId,
+      budget,
+    });
   };
 
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this expense? "
-    );
-    if (!confirmDelete) return;
-    try {
-      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/home/expense/${id}`, {
+  const deleteExpenseMutation = useMutation({
+    mutationFn: async (id) => {
+      return await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/home/expense/${id}`, {
         withCredentials: true,
       });
-      setExpenses(expenses.filter((expense) => expense._id !== id));
-      fetchBudget(); // Refresh budget data after deletion
-    } catch (error) {
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["expenses", userId] });
+      queryClient.invalidateQueries({ queryKey: ["budgets", userId] });
+    },
+    onError: (error) => {
       console.log("Error in deleting expense ", error);
     }
+  });
+
+  const handleDelete = (id) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this expense? ");
+    if (!confirmDelete) return;
+    deleteExpenseMutation.mutate(id);
   };
 
-  // Get remaining budget for selected category
   const getRemainingBudget = () => {
     if (!category) return 0;
     const spent = getTotalSpentForCategory(category);
@@ -169,19 +298,59 @@ function Expenses() {
 
   return (
     <div className="w-full ml-5">
-      <div className="border w-full p-4 rounded-md mb-6">
-        <h2 className="font-semibold text-xl md:text-2xl mb-4">
-          Add New Expense
-        </h2>
+      <div className="border w-full p-4 rounded-md mb-6 relative">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-semibold text-xl md:text-2xl">
+            Add New Expense
+          </h2>
+          <div className="flex gap-2">
+            <input 
+              type="file" 
+              accept="image/*" 
+              className="hidden" 
+              ref={fileInputRef} 
+              onChange={handleScanReceipt} 
+            />
+            <input 
+              type="file" 
+              accept=".csv" 
+              className="hidden" 
+              ref={csvInputRef} 
+              onChange={handleCSVUpload} 
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isScanning || isUploadingCSV}
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1.5 rounded-lg text-sm hover:shadow-lg transition-all disabled:opacity-50"
+            >
+              {isScanning ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
+              {isScanning ? scanProgress : "Scan Receipt"}
+            </button>
+            <button
+              onClick={() => csvInputRef.current?.click()}
+              disabled={isScanning || isUploadingCSV || isListening}
+              className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm hover:shadow-lg transition-all disabled:opacity-50"
+            >
+              {isUploadingCSV ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+              {isUploadingCSV ? "Importing..." : "CSV"}
+            </button>
+            <button
+              onClick={handleVoiceEntry}
+              disabled={isScanning || isUploadingCSV || isListening}
+              className={`flex items-center gap-2 ${isListening ? 'bg-red-500 animate-pulse' : 'bg-orange-500'} text-white px-3 py-1.5 rounded-lg text-sm hover:shadow-lg transition-all disabled:opacity-50`}
+            >
+              <Mic size={16} />
+              {isListening ? "Listening..." : "Voice"}
+            </button>
+          </div>
+        </div>
 
         {/* Budget Information */}
         {category && (
           <div className="mb-4 p-3 bg-blue-50 rounded-md">
             <p className="text-sm text-blue-800">
-              <strong>{category} Budget:</strong> $
-              {getBudgetForCategory(category)} |<strong> Spent:</strong> $
-              {getTotalSpentForCategory(category)} |<strong> Remaining:</strong>{" "}
-              ${getRemainingBudget()}
+              <strong>{category} Budget:</strong> {formatAmount(getBudgetForCategory(category))} |<strong> Spent:</strong> {formatAmount(getTotalSpentForCategory(category))} |<strong> Remaining:</strong>{" "}
+              {formatAmount(getRemainingBudget())}
             </p>
           </div>
         )}
@@ -244,9 +413,24 @@ function Expenses() {
             </div>
 
             <div>
-              <label htmlFor="category" className="block mb-1 font-medium">
-                Category
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="category" className="block font-medium">
+                  Category
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAutoCategorize}
+                  disabled={isCategorizing || !description}
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50 transition-colors"
+                >
+                  {isCategorizing ? (
+                    <Loader2 size={12} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={12} />
+                  )}
+                  Auto-categorize
+                </button>
+              </div>
               <select
                 id="category"
                 className="border rounded-md p-2 w-full"
@@ -302,13 +486,13 @@ function Expenses() {
         </h2>
 
         {expenses.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">
+          <p className="text-gray-500 dark:text-gray-300 text-center py-4">
             No expenses added yet
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-full">
-              <thead className="bg-gray-100">
+              <thead className="bg-gray-100 dark:bg-gray-800">
                 <tr>
                   <th className="p-2 text-left">Description</th>
                   <th className="p-2 text-left">Amount</th>
@@ -324,7 +508,7 @@ function Expenses() {
                 {expenses.map((expense) => (
                   <tr key={expense._id} className="border-b">
                     <td className="p-2">{expense.description}</td>
-                    <td className="p-2">${expense.amount}</td>
+                    <td className="p-2">{formatAmount(expense.amount)}</td>
                     <td className="p-2 hidden sm:table-cell">
                       {new Date(expense.date).toLocaleDateString("en-GB")}
                     </td>
@@ -335,7 +519,7 @@ function Expenses() {
                       {expense.tags.map((tag, i) => (
                         <span
                           key={i}
-                          className="bg-gray-200 px-2 py-1 rounded-full text-sm mr-1"
+                          className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded-full text-sm mr-1"
                         >
                           {tag}
                         </span>

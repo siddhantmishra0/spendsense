@@ -1,0 +1,42 @@
+name: SpendSense CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+        cache-dependency-path: BackEnd/package-lock.json
+    - name: Install dependencies
+      working-directory: ./BackEnd
+      run: npm install
+    - name: Run Backend Tests
+      working-directory: ./BackEnd
+      run: npm test
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+        cache-dependency-path: FrontEnd/package-lock.json
+    - name: Install dependencies
+      working-directory: ./FrontEnd
+      run: npm install
+    - name: Run Frontend Tests
+      working-directory: ./FrontEnd
+      run: npm run test

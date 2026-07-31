@@ -9,8 +9,24 @@ import Budget from "./components/Budget";
 import Expenses from "./components/Expenses";
 import Report from "./components/Report";
 import Insights from "./components/Insights";
+import Goals from "./components/Goals";
+import Subscriptions from "./components/Subscriptions";
+import Rewards from "./components/Rewards";
+import NetWorth from "./components/NetWorth";
+import ExpenseSplitter from "./components/ExpenseSplitter";
 import { useEffect } from "react";
+import useAppStore from "./store/useAppStore";
+
 function App() {
+    const { isDarkMode } = useAppStore();
+
+    useEffect(() => {
+      if (isDarkMode) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    }, [isDarkMode]);
     // const navigate = useNavigate();
 
     useEffect(() => {
@@ -44,6 +60,11 @@ function App() {
             <Route path="expense" element={<Expenses />} />
             <Route path="report" element={<Report />} />
             <Route path="insight" element={<Insights />} />
+            <Route path="goals" element={<Goals />} />
+            <Route path="subscriptions" element={<Subscriptions />} />
+            <Route path="rewards" element={<Rewards />} />
+            <Route path="networth" element={<NetWorth />} />
+            <Route path="split" element={<ExpenseSplitter />} />
           </Route>
         </Routes>
       </BrowserRouter>
