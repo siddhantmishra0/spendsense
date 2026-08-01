@@ -1,8 +1,8 @@
-# SpendSense 2.0 💸🤖
+# SpendSense 💸🤖
 
 SpendSense is a comprehensive, production-ready **AI-powered Personal Finance Platform** built using the MERN stack (MongoDB, Express, React, Node.js). 
 
-Evolving from a robust expense tracker, SpendSense 2.0 introduces deep data intelligence, OCR receipt scanning, gamification, family expense splitting, and a full Progressive Web App (PWA) experience to empower users to take absolute control of their financial health.
+Evolving from a robust expense tracker, SpendSense introduces deep data intelligence, OCR receipt scanning, gamification, family expense splitting, and a full Progressive Web App (PWA) experience to empower users to take absolute control of their financial health.
 
 ---
 
@@ -114,4 +114,4 @@ SpendSense includes a robust automated testing suite.
 
 ---
 
-*SpendSense 2.0 – Because your financial data deserves next-generation intelligence.*
+*SpendSense – Because your financial data deserves next-generation intelligence.*
