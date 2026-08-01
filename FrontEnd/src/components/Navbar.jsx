@@ -9,6 +9,7 @@ import AIAssistant from "./AIAssistant";
 export default function Navbar() {
   const location = useLocation();
   const [user, setUser] = useState();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const { isDarkMode, toggleTheme, currency, setCurrency } = useAppStore();
 
@@ -61,10 +62,25 @@ export default function Navbar() {
   return (
     <>
       {/* Header */}
-      <div className="w-screen">
-        <div className="flex flex-col sm:flex-row justify-between items-center px-14 py-4 ml-4">
-          <div className="font-bold text-2xl mb-2 sm:mb-0">Expense Tracker</div>
-          <div className="flex flex-col sm:flex-row items-center gap-4">
+      <div className="w-full">
+        <div className="flex flex-col sm:flex-row justify-between items-center px-4 sm:px-8 md:px-14 py-4">
+          <div className="flex items-center justify-between w-full sm:w-auto mb-2 sm:mb-0">
+            <div className="font-bold text-2xl">Expense Tracker</div>
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="lg:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Toggle Sidebar"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {sidebarOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 justify-center sm:justify-end">
             <select
               value={currency}
               onChange={(e) => {
@@ -90,10 +106,10 @@ export default function Navbar() {
             >
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <div>Welcome, {user?.username}</div>
+            <div className="hidden sm:block">Welcome, {user?.username}</div>
             <button
               onClick={handleClick}
-              className="border rounded-md px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800 border-gray-300 dark:border-gray-600 transition-colors"
+              className="border rounded-md px-3 py-1.5 sm:px-4 sm:py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 border-gray-300 dark:border-gray-600 transition-colors"
             >
               Logout
             </button>
@@ -101,9 +117,9 @@ export default function Navbar() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row px-4 md:px-16 py-4 gap-4">
-        {/* Left Sidebar (turns horizontal on small screens) */}
-        <div className="bg-white dark:bg-gray-800 rounded-md p-4 shadow-sm border border-gray-200 dark:border-gray-700 w-full h-full lg:w-60 transition-colors">
+      <div className="flex flex-col lg:flex-row px-4 md:px-8 lg:px-16 py-4 gap-4">
+        {/* Left Sidebar (collapsible on mobile) */}
+        <div className={`bg-white dark:bg-gray-800 rounded-md p-4 shadow-sm border border-gray-200 dark:border-gray-700 w-full lg:w-60 transition-all ${sidebarOpen ? 'block' : 'hidden lg:block'}`}>
           {[
             { label: "Dashboard", path: "/home" },
             { label: "Expenses", path: "/home/expense" },
@@ -116,12 +132,12 @@ export default function Navbar() {
             { label: "Splitwise", path: "/home/split" },
             { label: "Rewards 🏆", path: "/home/rewards" },
           ].map((item, idx) => (
-            <Link key={idx} to={item.path}>
+            <Link key={idx} to={item.path} onClick={() => setSidebarOpen(false)}>
               <div
               className={`w-full text-left px-4 py-2 rounded-md font-medium transition-colors ${
                 location.pathname === item.path
-                  ? "bg-black text-white dark:bg-white dark:bg-gray-800 dark:text-black"
-                  : "text-black dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+                  ? "bg-black text-white dark:bg-white dark:text-black"
+                  : "text-black dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
             >
               {item.label}
@@ -129,7 +145,7 @@ export default function Navbar() {
             </Link>
           ))}
         </div>
-        <div className="flex-1 w-full">
+        <div className="flex-1 w-full min-w-0">
           <Outlet/>
         </div>
       </div>

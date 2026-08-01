@@ -297,13 +297,13 @@ function Expenses() {
   };
 
   return (
-    <div className="w-full ml-5">
+    <div className="w-full">
       <div className="border w-full p-4 rounded-md mb-6 relative">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
           <h2 className="font-semibold text-xl md:text-2xl">
             Add New Expense
           </h2>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <input 
               type="file" 
               accept="image/*" 

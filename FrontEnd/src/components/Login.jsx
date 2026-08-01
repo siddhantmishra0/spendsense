@@ -48,10 +48,10 @@ const Login = () => {
           <div className="hidden lg:block">
             <div className="space-y-8">
               <div>
-                <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
+                <h1 className="text-5xl font-bold text-gray-900 mb-4">
                   Welcome Back
                 </h1>
-                <p className="text-xl text-gray-600 dark:text-gray-200">
+                <p className="text-xl text-gray-600">
                   Track your expenses and take control of your finances
                 </p>
               </div>
@@ -65,8 +65,8 @@ const Login = () => {
                   <div key={idx} className="flex items-start space-x-4">
                     <span className="text-3xl">{item.icon}</span>
                     <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">{item.title}</h3>
-                      <p className="text-gray-600 dark:text-gray-200 text-sm">{item.desc}</p>
+                      <h3 className="font-semibold text-gray-900">{item.title}</h3>
+                      <p className="text-gray-600 text-sm">{item.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -77,7 +77,7 @@ const Login = () => {
           {/* Right - Auth Card */}
           <div className="flex justify-center">
             <div className="w-full max-w-sm">
-              <div className="bg-white dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-white/20">
+              <div className="bg-white backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-white/20">
                 {/* Header */}
                 <div className="mb-8">
                   <div className="flex items-center space-x-2 mb-4">
@@ -88,13 +88,13 @@ const Login = () => {
                       SpendSense
                     </span>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-200">Sign in to your account</p>
+                  <p className="text-gray-600">Sign in to your account</p>
                 </div>
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Username
                     </label>
                     <input
@@ -102,13 +102,13 @@ const Login = () => {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="Enter your username"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
                       Password
                     </label>
                     <input
@@ -116,7 +116,7 @@ const Login = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter your password"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
                       required
                     />
                   </div>
@@ -136,7 +136,7 @@ const Login = () => {
                     <div className="w-full border-t border-gray-200"></div>
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-200">New to SpendSense?</span>
+                    <span className="px-2 bg-white text-gray-600">New to SpendSense?</span>
                   </div>
                 </div>
 
@@ -144,7 +144,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => navigate("/register")}
-                  className="w-full py-3 px-4 border-2 border-gray-200 text-gray-900 dark:text-white font-semibold rounded-lg hover:border-blue-600 hover:bg-blue-50 transition"
+                  className="w-full py-3 px-4 border-2 border-gray-200 text-gray-900 font-semibold rounded-lg hover:border-blue-600 hover:bg-blue-50 transition"
                 >
                   Create an Account
                 </button>

@@ -6,6 +6,13 @@ import logo from '../assets/logo.png';
 export default function GettingStarted() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('product');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const scrollToSection = (sectionId) => {
+    setActiveSection(sectionId);
+    setMobileMenuOpen(false);
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+  };
 
 
   useEffect(() => {
@@ -40,36 +47,53 @@ export default function GettingStarted() {
         }
       `}</style>
       <header className="fixed top-0 left-0 right-0 z-50 bg-surface/70 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-        <div className="h-20 max-w-container-max mx-auto px-margin-desktop flex items-center justify-between">
+        <div className="h-20 max-w-container-max mx-auto px-4 md:px-margin-desktop flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img alt="Logo" className="h-40 w-auto object-contain" src={logo} />
+            <img alt="Logo" className="h-20 md:h-40 w-auto object-contain" src={logo} />
           </div>
           <nav className="hidden lg:flex items-center gap-gutter">
-            <a className={`transition-colors cursor-pointer ${activeSection === 'product' ? 'text-primary font-bold' : 'font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface'}`} onClick={(e) => { e.preventDefault(); setActiveSection('product'); document.getElementById('product')?.scrollIntoView({ behavior: 'smooth' }); }}>
+            <a className={`transition-colors cursor-pointer ${activeSection === 'product' ? 'text-primary font-bold' : 'font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface'}`} onClick={() => scrollToSection('product')}>
               Product
             </a>
-            <a className={`transition-colors cursor-pointer ${activeSection === 'features' ? 'text-primary font-bold' : 'font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface'}`} onClick={(e) => { e.preventDefault(); setActiveSection('features'); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }); }}>
+            <a className={`transition-colors cursor-pointer ${activeSection === 'features' ? 'text-primary font-bold' : 'font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface'}`} onClick={() => scrollToSection('features')}>
               Features
             </a>
-            <a className={`transition-colors cursor-pointer ${activeSection === 'technology' ? 'text-primary font-bold' : 'font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface'}`} onClick={(e) => { e.preventDefault(); setActiveSection('technology'); document.getElementById('technology')?.scrollIntoView({ behavior: 'smooth' }); }}>
+            <a className={`transition-colors cursor-pointer ${activeSection === 'technology' ? 'text-primary font-bold' : 'font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface'}`} onClick={() => scrollToSection('technology')}>
               Technology
             </a>
           </nav>
-          <div className="flex items-center gap-4">
-            <button className="hidden md:block bg-primary text-on-primary font-label-sm text-label-sm px-6 py-2.5 rounded-full hover:shadow-lg transition-all" onClick={() => navigate("/register")}>
+          <div className="flex items-center gap-3">
+            <button className="bg-primary text-on-primary font-label-sm text-label-sm px-4 py-2 md:px-6 md:py-2.5 rounded-full hover:shadow-lg transition-all text-[11px] md:text-label-sm" onClick={() => navigate("/register")}>
               Get Started
             </button>
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="material-symbols-outlined text-on-primary text-[18px]">
-                person
+            {/* Hamburger Menu Button - visible on mobile/tablet */}
+            <button className="lg:hidden w-10 h-10 rounded-full bg-surface-container flex items-center justify-center" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              <span className="material-symbols-outlined text-on-surface text-[24px]">
+                {mobileMenuOpen ? 'close' : 'menu'}
               </span>
-            </div>
+            </button>
           </div>
         </div>
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden bg-surface/95 backdrop-blur-2xl border-t border-outline-variant/20 shadow-lg animate-[slideDown_0.2s_ease-out]">
+            <div className="max-w-container-max mx-auto px-4 py-4 flex flex-col gap-1">
+              {[{id: 'product', label: 'Product'}, {id: 'features', label: 'Features'}, {id: 'technology', label: 'Technology'}].map(item => (
+                <a key={item.id} className={`px-4 py-3 rounded-xl cursor-pointer transition-all ${activeSection === item.id ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container-high'}`} onClick={() => scrollToSection(item.id)}>
+                  {item.label}
+                </a>
+              ))}
+              <hr className="border-outline-variant/20 my-2" />
+              <button className="w-full bg-primary text-on-primary font-label-sm text-label-sm px-6 py-3 rounded-xl hover:shadow-lg transition-all" onClick={() => { setMobileMenuOpen(false); navigate('/register'); }}>
+                Get Started Free
+              </button>
+            </div>
+          </div>
+        )}
       </header>
       <main className="pt-20 flex-grow"><div className="flex flex-col w-full">
         {/* Hero Section: Immersive Glassmorphic Start */}
-        <section className="relative min-h-[90vh] flex items-center overflow-hidden px-margin-desktop bg-surface">
+        <section className="relative min-h-[90vh] flex items-center overflow-hidden px-4 md:px-margin-desktop bg-surface">
           {/* Ambient Background Elements */}
           <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] animate-pulse"></div>
           <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px]"></div>
@@ -128,7 +152,7 @@ export default function GettingStarted() {
           </div>
         </section>
         {/* Features Section: Glassmorphic Bento Grid */}
-        <section id="features" className="py-24 px-margin-desktop bg-surface-container-lowest">
+        <section id="features" className="py-16 md:py-24 px-4 md:px-margin-desktop bg-surface-container-lowest">
           <div className="max-w-container-max mx-auto">
             <div className="flex flex-col items-center text-center gap-4 mb-16">
               <h2 className="font-headline-lg text-headline-lg text-on-surface transition-all duration-1000 opacity-100 translate-y-0">Intelligent Features for Modern Finance</h2>
@@ -242,7 +266,7 @@ export default function GettingStarted() {
           </div>
         </section>
         {/* How It Works: Visual Process */}
-        <section id="how-it-works" className="py-24 bg-surface-container-low px-margin-desktop">
+        <section id="how-it-works" className="py-16 md:py-24 bg-surface-container-low px-4 md:px-margin-desktop">
           <div className="max-w-container-max mx-auto">
             <div className="text-center mb-16">
               <h2 className="font-display-lg text-on-surface mb-4 transition-all duration-1000 opacity-100 translate-y-0">Financial Mastery in 3 Steps</h2>
@@ -275,7 +299,7 @@ export default function GettingStarted() {
           </div>
         </section>
         {/* Metrics & Impact */}
-        <section className="py-24 px-margin-desktop bg-white">
+        <section className="py-16 md:py-24 px-4 md:px-margin-desktop bg-white">
           <div className="max-w-container-max mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="grid grid-cols-2 gap-8">
               <div className="p-10 rounded-3xl bg-surface-container-lowest shadow-sm flex flex-col gap-2 transition-all duration-1000 opacity-100 translate-y-0">
@@ -344,7 +368,7 @@ export default function GettingStarted() {
           </div>
         </section>
         {/* CTA Section: High-End Conclusion */}
-        <section className="py-32 px-margin-desktop relative overflow-hidden">
+        <section className="py-16 md:py-32 px-4 md:px-margin-desktop relative overflow-hidden">
           <div className="absolute inset-0 bg-on-background"></div>
           {/* Decorative Shader Element */}
 
@@ -383,7 +407,7 @@ export default function GettingStarted() {
         </section>
       </div>
 
-      </main><footer className="bg-surface-container-low py-16 border-t border-outline-variant"><div className="max-w-container-max mx-auto px-margin-desktop flex flex-col gap-12"><div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12"><div className="col-span-2 lg:col-span-2 flex flex-col gap-4"><div className="flex items-center gap-2"><img alt="Logo" className="h-14 w-auto object-contain" src={logo} /></div><p className="text-body-md text-on-surface-variant max-w-xs">The intelligent layer for modern financial growth and spend management.</p></div><div className="flex flex-col gap-4"><h4 className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">Solutions</h4><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>Enterprise</a><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>Startups</a><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>SaaS</a></div><div className="flex flex-col gap-4"><h4 className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">Company</h4><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>About Us</a><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>Careers</a><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>Press</a></div><div className="flex flex-col gap-4"><h4 className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">Support</h4><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>Help Center</a><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>Contact</a><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>Legal</a></div></div><div className="pt-8 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-4"><div className="text-label-sm text-on-surface-variant">© 2024 SpendSense. All rights reserved.</div><div className="flex items-center gap-6"><span className="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors">hub</span><span className="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors">share</span><span className="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors">alternate_email</span></div></div></div></footer>
+      </main><footer className="bg-surface-container-low py-10 md:py-16 border-t border-outline-variant"><div className="max-w-container-max mx-auto px-4 md:px-margin-desktop flex flex-col gap-8 md:gap-12"><div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-12"><div className="col-span-2 lg:col-span-2 flex flex-col gap-4"><div className="flex items-center gap-2"><img alt="Logo" className="h-14 w-auto object-contain" src={logo} /></div><p className="text-body-md text-on-surface-variant max-w-xs">The intelligent layer for modern financial growth and spend management.</p></div><div className="flex flex-col gap-4"><h4 className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">Solutions</h4><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>Enterprise</a><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>Startups</a><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>SaaS</a></div><div className="flex flex-col gap-4"><h4 className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">Company</h4><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>About Us</a><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>Careers</a><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>Press</a></div><div className="flex flex-col gap-4"><h4 className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">Support</h4><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>Help Center</a><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>Contact</a><a className="text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#" onClick={(e) => { e.preventDefault(); }}>Legal</a></div></div><div className="pt-8 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-4"><div className="text-label-sm text-on-surface-variant">© 2024 SpendSense. All rights reserved.</div><div className="flex items-center gap-6"><span className="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors">hub</span><span className="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors">share</span><span className="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors">alternate_email</span></div></div></div></footer>
 
 
     </div>
